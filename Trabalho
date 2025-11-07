@@ -1,0 +1,143 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+#define TAM_FILA 5
+
+// Estrutura que representa uma peça do Tetris
+typedef struct {
+    int id;
+    char tipo;
+} Peca;
+
+// Estrutura que representa a fila circular
+typedef struct {
+    Peca fila[TAM_FILA];
+    int frente;
+    int tras;
+    int tamanho;
+} Fila;
+
+// ---------- Funções auxiliares ---------- //
+
+// Gera uma nova peça automaticamente
+Peca gerarPeca(int id) {
+    char tipos[] = {'I', 'O', 'T', 'L', 'J', 'S', 'Z'};
+    Peca nova;
+    nova.id = id;
+    nova.tipo = tipos[rand() % 7];
+    return nova;
+}
+
+// Inicializa a fila com 5 peças
+void inicializarFila(Fila *f) {
+    f->frente = 0;
+    f->tras = TAM_FILA - 1;
+    f->tamanho = TAM_FILA;
+
+    for (int i = 0; i < TAM_FILA; i++) {
+        f->fila[i] = gerarPeca(i + 1);
+    }
+}
+
+// Verifica se a fila está cheia
+int estaCheia(Fila *f) {
+    return f->tamanho == TAM_FILA;
+}
+
+// Verifica se a fila está vazia
+int estaVazia(Fila *f) {
+    return f->tamanho == 0;
+}
+
+// Insere nova peça no final da fila
+void inserirPeca(Fila *f, Peca nova) {
+    if (estaCheia(f)) {
+        printf("⚠️  A fila está cheia! Jogue uma peça antes de inserir outra.\n");
+        return;
+    }
+    f->tras = (f->tras + 1) % TAM_FILA;
+    f->fila[f->tras] = nova;
+    f->tamanho++;
+    printf("✅ Peça '%c' (ID %d) adicionada à fila!\n", nova.tipo, nova.id);
+}
+
+// Remove a peça da frente (jogar a peça)
+void jogarPeca(Fila *f) {
+    if (estaVazia(f)) {
+        printf("⚠️  Fila vazia! Não há peças para jogar.\n");
+        return;
+    }
+    Peca jogada = f->fila[f->frente];
+    f->frente = (f->frente + 1) % TAM_FILA;
+    f->tamanho--;
+    printf("🎮 Peça jogada: '%c' (ID %d)\n", jogada.tipo, jogada.id);
+}
+
+// Exibe o estado atual da fila
+void exibirFila(Fila *f) {
+    if (estaVazia(f)) {
+        printf("\n📭 Fila vazia!\n");
+        return;
+    }
+
+    printf("\n=== FILA ATUAL DE PEÇAS ===\n");
+    printf("%-10s %-10s\n", "ID", "Tipo");
+    printf("--------------------------\n");
+
+    int i = f->frente;
+    for (int cont = 0; cont < f->tamanho; cont++) {
+        printf("%-10d %-10c\n", f->fila[i].id, f->fila[i].tipo);
+        i = (i + 1) % TAM_FILA;
+    }
+}
+
+// ---------- Função principal ---------- //
+int main() {
+    Fila fila;
+    int opcao;
+    int contadorIDs = 5; // começa em 5 pois as 5 iniciais já foram criadas
+
+    srand(time(NULL)); // para gerar peças aleatórias
+
+    inicializarFila(&fila);
+
+    do {
+        printf("\n=== MENU TETRIS STACK ===\n");
+        printf("1 - Visualizar fila\n");
+        printf("2 - Jogar peça (remover da frente)\n");
+        printf("3 - Inserir nova peça (no final)\n");
+        printf("0 - Sair\n");
+        printf("Escolha uma opção: ");
+        scanf("%d", &opcao);
+
+        switch (opcao) {
+            case 1:
+                exibirFila(&fila);
+                break;
+
+            case 2:
+                jogarPeca(&fila);
+                break;
+
+            case 3:
+                if (!estaCheia(&fila)) {
+                    contadorIDs++;
+                    inserirPeca(&fila, gerarPeca(contadorIDs));
+                } else {
+                    printf("⚠️  Fila cheia! Jogue uma peça primeiro.\n");
+                }
+                break;
+
+            case 0:
+                printf("\nEncerrando o jogo... 👋\n");
+                break;
+
+            default:
+                printf("❗ Opção inválida, tente novamente.\n");
+        }
+
+    } while (opcao != 0);
+
+    return 0;
+}
